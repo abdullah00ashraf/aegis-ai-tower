@@ -74,3 +74,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2025-05-22T15:13:33+0530`
 
+### [2025-05-27 16:06 IST] - `perf(gguf): optimize 4-bit quantized prompt batching across threads`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2025-05-27T16:06:52+0530`
+
