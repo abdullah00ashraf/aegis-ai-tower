@@ -79,3 +79,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2025-05-27T16:06:52+0530`
 
+### [2025-06-01 09:16 IST] - `feat(tower): implement hierarchical floor arbitration for Floor-14`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2025-06-01T09:16:44+0530`
+
