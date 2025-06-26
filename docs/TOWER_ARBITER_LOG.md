@@ -89,3 +89,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2025-06-03T19:57:00+0530`
 
+### [2025-06-26 22:46 IST] - `perf(kv-cache): compress context attention cache for long prompts`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2025-06-26T22:46:46+0530`
+
