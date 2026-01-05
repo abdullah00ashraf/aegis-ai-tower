@@ -229,3 +229,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2025-12-31T15:36:20+0530`
 
+### [2026-01-05 16:24 IST] - `docs(api): document IPC protocol between tower floor controllers`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2026-01-05T16:24:09+0530`
+
