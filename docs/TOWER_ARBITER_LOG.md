@@ -254,3 +254,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2026-02-09T15:41:47+0530`
 
+### [2026-02-11 21:50 IST] - `fix(quant): resolve FP16 dequantization edge-case on AVX2 instructions`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2026-02-11T21:50:05+0530`
+
