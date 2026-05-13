@@ -339,3 +339,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2026-05-05T09:34:54+0530`
 
+### [2026-05-13 22:58 IST] - `docs(floors): document Floor-01 to Floor-26 state transition lifecycle`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2026-05-13T22:58:43+0530`
+
