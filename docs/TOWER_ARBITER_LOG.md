@@ -349,3 +349,8 @@ This document tracks verified architectural iterations, feature additions, and p
 - **Status**: Verified & Integrated into `main`
 - **Timestamp**: `2026-05-14T16:29:25+0530`
 
+### [2026-05-21 12:37 IST] - `feat(bus): add event-driven telemetry stream across tower floors`
+- **Component**: Hierarchical Arbiter & GGUF Model Runtime
+- **Status**: Verified & Integrated into `main`
+- **Timestamp**: `2026-05-21T12:37:28+0530`
+
