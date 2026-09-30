@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>AEGIS TOWER - Strategic OS Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      :root {
+        --primary: #00E5FF;
+        --secondary: #0088FF;
+        --tertiary: #00FFCC;
+        --dark: #030508;
+        --surface: rgba(5, 8, 16, 0.65);
+        --surface-border: rgba(0, 229, 255, 0.15);
+        --text: #F0F5FA;
+        --text-muted: #8A9BB4;
+        --glow: 0 0 15px rgba(0, 229, 255, 0.3);
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background-color: var(--dark);
+        font-family: 'Inter', sans-serif;
+        color: var(--text);
+        display: flex;
+        overflow-x: hidden;
+      }
+
+      /* Video Background */
+      .video-background { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; overflow: hidden; background: var(--dark); }
+      .video-background video { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+      .video-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(3,5,8,0.4) 0%, rgba(3,5,8,0.85) 100%); backdrop-filter: blur(2px); }
+
+      /* Sidebar Navigation */
+      .sidebar {
+        width: 300px; height: 100vh; position: fixed; top: 0; left: 0;
+        background: transparent;
+        padding: 50px 0 50px 30px;
+        display: flex; flex-direction: column; z-index: 100;
+        pointer-events: none; /* Let clicks pass through empty spaces */
+      }
+      .sidebar::before {
+        content: ''; position: absolute; top: 50px; bottom: 50px; left: 45px;
+        width: 1px; background: rgba(255,255,255,0.1); z-index: -1;
+      }
+      .sidebar-brand { font-family: 'Outfit'; font-size: 2rem; font-weight: 800; color: var(--text); letter-spacing: 0.25em; margin-bottom: 60px; padding-left: 20px; text-transform: uppercase; pointer-events: auto; line-height: 1.1; }
+      .sidebar-brand span { color: var(--primary); display: block; margin-top: 4px; padding-left: 2px; }
+      
+      .nav-links { display: flex; flex-direction: column; gap: 25px; flex-grow: 1; position: relative; pointer-events: auto; }
+      .nav-link {
+        color: var(--text-muted); text-decoration: none; font-size: 0.75rem; font-weight: 600;
+        padding: 5px 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex; align-items: center; letter-spacing: 0.1em; text-transform: uppercase;
+        position: relative; padding-left: 50px;
+      }
+      .nav-number { 
+        position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+        font-family: 'Outfit'; font-size: 0.65rem; color: var(--text-muted); 
+        background: var(--dark); padding: 4px; border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.4s ease; z-index: 2;
+      }
+      .nav-link::before {
+        content: ''; position: absolute; left: 15px; top: 50%; width: 25px; height: 1px;
+        background: rgba(255,255,255,0.1); transition: all 0.4s ease; z-index: 1;
+      }
+      
+      .nav-link:hover, .nav-link.active { color: var(--primary); padding-left: 60px; }
+      .nav-link:hover .nav-number, .nav-link.active .nav-number { 
+        color: var(--dark); background: var(--primary); border-color: var(--primary); box-shadow: 0 0 15px rgba(0,229,255,0.5);
+      }
+      .nav-link:hover::before, .nav-link.active::before { width: 35px; background: var(--primary); }
+      
+      .sys-clock {
+        margin-top: auto; padding: 10px 20px;
+        border-left: 2px solid var(--primary); text-align: left; font-family: 'Outfit'; font-weight: 700;
+        font-size: 0.75rem; color: var(--primary); letter-spacing: 0.2em; pointer-events: auto;
+        background: linear-gradient(90deg, rgba(0,229,255,0.1) 0%, transparent 100%);
+      }
+
+      /* Main Content Area */
+      .main-content { margin-left: 300px; width: calc(100% - 300px); height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+      .section { min-height: 100vh; width: 100%; scroll-snap-align: start; padding: 60px 80px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+
+      /* Webpage Typography */
+      h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 800; margin-bottom: 25px; color: var(--text); }
+      h1 { 
+        font-size: 4rem; line-height: 1.05; letter-spacing: -0.02em; 
+        text-shadow: 0 0 40px rgba(0,229,255,0.15), 2px 2px 0px rgba(0,0,0,0.8); 
+      }
+      h2 { 
+        font-size: 2.8rem; letter-spacing: -0.01em; line-height: 1.1; 
+        text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      }
+      h3 { 
+        font-size: 1.1rem; color: var(--text); letter-spacing: 0.15em; text-transform: uppercase;
+        border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+      }
+      p { 
+        font-size: 1.05rem; line-height: 1.7; color: #94a3b8; 
+        margin-bottom: 25px; font-weight: 400; max-width: 750px; letter-spacing: 0.02em;
+      }
+      strong { 
+        color: var(--primary); font-weight: 600; 
+        text-shadow: 0 0 12px rgba(0, 229, 255, 0.4); 
+        letter-spacing: 0.05em;
+      }
+
+      .text-gradient { 
+        background: linear-gradient(135deg, #FFFFFF 0%, var(--primary) 50%, #0088FF 100%); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        filter: drop-shadow(0 0 10px rgba(0,229,255,0.3));
+      }
+
+      .tag {
+        display: inline-flex; align-items: center; padding: 6px 12px;
+        font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+        background: rgba(0, 229, 255, 0.05); color: var(--primary);
+        margin-bottom: 20px; border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 2px;
+        position: relative;
+      }
+      .tag::before, .tag::after { content: ''; position: absolute; width: 4px; height: 4px; border: 1px solid var(--primary); }
+      .tag::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+      .tag::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+      /* Layout Grids */
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; width: 100%; }
+      .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; width: 100%; }
+      
+      .content-block { max-width: 600px; }
+
+      /* Webpage Cards / Panels */
+      .panel {
+        background: var(--surface); backdrop-filter: blur(20px);
+        border: 1px solid var(--surface-border); border-radius: 8px;
+        padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        position: relative; transition: all 0.3s;
+      }
+      .panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); opacity: 0.5; }
+      .panel:hover { border-color: rgba(0,229,255,0.3); box-shadow: 0 15px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0, 229, 255, 0.05); }
+
+      .chart-container {
+        position: relative; height: 350px; width: 100%;
+        background: rgba(0,0,0,0.4); border-radius: 6px; padding: 20px;
+        border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box;
+      }
+      canvas { width: 100% !important; height: 100% !important; }
+
+      /* Data Tables */
+      .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+      .data-table th { color: var(--text-muted); padding: 12px 15px; text-align: left; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; font-family: 'Outfit'; font-weight: 700; border-bottom: 1px solid var(--surface-border); }
+      .data-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .data-table tr:hover td { background: rgba(0,229,255,0.03); }
+
+      /* Scroll Animation Classes */
+      .fade-up { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+      .fade-in { opacity: 0; transition: opacity 0.8s ease 0.3s; }
+      .visible { opacity: 1; transform: translateY(0); }
+
+      /* Lists */
+      ul.styled-list { list-style: none; padding: 0; }
+      ul.styled-list li { position: relative; padding-left: 30px; margin-bottom: 20px; font-size: 1.1rem; color: var(--text-muted); font-weight: 500; }
+      ul.styled-list li::before { content: ""; position: absolute; left: 0; top: 6px; width: 12px; height: 12px; background: var(--tertiary); border-radius: 50%; box-shadow: 0 0 15px var(--tertiary); }
+
+      /* Metric emphasis */
+      .metric-large { font-family: 'Outfit'; font-size: 4rem; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 10px; text-shadow: var(--glow); }
+      .metric-label { font-family: 'Inter'; font-size: 0.9rem; text-transform: lowercase; letter-spacing: -0.02em; font-weight: 700; color: var(--primary); }
+
+      /* Custom Flexbox Diagram */
+      .custom-diagram { display: flex; align-items: center; justify-content: center; width: 100%; gap: 0; padding: 10px 0; }
+      
+      .dia-node { background: rgba(5, 8, 16, 0.8); border: 1px solid rgba(0,229,255,0.4); border-radius: 6px; padding: 20px; text-align: center; width: 180px; height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; box-shadow: 0 0 20px rgba(0,0,0,0.5); position: relative; }
+      .dia-node::before { content: ''; position: absolute; top: -3px; left: -3px; width: 10px; height: 10px; border-top: 2px solid var(--primary); border-left: 2px solid var(--primary); }
+      .dia-node::after { content: ''; position: absolute; bottom: -3px; right: -3px; width: 10px; height: 10px; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); }
+      
+      .dia-node h4 { margin: 0 0 8px 0; font-size: 0.75rem; color: var(--primary); font-family: 'Outfit'; letter-spacing: 0.1em; text-transform: uppercase; }
+      .dia-node p { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text); line-height: 1.2; text-transform: uppercase; }
+      
+      .dia-arrow-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 160px; position: relative; z-index: 1; flex-shrink: 0; }
+      .dia-arrow-line { width: 100%; height: 2px; background: rgba(0,229,255,0.3); position: relative; z-index: 1; }
+      .dia-arrow-line::after { content: ''; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--primary); }
+      
+      .dia-label { font-family: 'Inter'; font-size: 9px; font-weight: 600; margin-bottom: 6px; text-align: center; white-space: nowrap; background: var(--dark); padding: 4px 8px; border-radius: 2px; border: 1px solid rgba(0,229,255,0.2); position: relative; z-index: 3; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); }
+
+      .dia-fork { display: flex; flex-direction: column; justify-content: center; gap: 30px; height: 140px; width: 190px; position: relative; z-index: 1; flex-shrink: 0; }
+      .dia-fork-path { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
+      .dia-fork-line { width: 100%; height: 2px; background: rgba(0,229,255,0.3); position: relative; z-index: 1; }
+      .dia-fork-line { width: 100%; height: 2px; background: rgba(0,229,255,0.3); position: relative; z-index: 1; }
+      .dia-fork-line::after { content: ''; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--primary); }
+
+      /* Mobile & Tablet Responsiveness */
+      @media (max-width: 1000px) {
+        .sidebar { display: none; }
+        .main-content { margin-left: 0; width: 100%; }
+        .section { padding: 40px 20px; min-height: auto; padding-top: 80px; padding-bottom: 80px; }
+        .grid-2, .grid-3 { grid-template-columns: 1fr; gap: 40px; }
+        
+        h1 { font-size: 2.8rem; }
+        h2 { font-size: 2rem; }
+        p { font-size: 1rem; }
+        
+        .metric-large { font-size: 2.8rem; }
+        
+        /* Enable horizontal swipe for complex diagrams on mobile to preserve layout */
+        .custom-diagram { justify-content: flex-start; overflow-x: auto; padding-bottom: 20px; -webkit-overflow-scrolling: touch; }
+        .mermaid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .chart-container { height: 300px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="video-background">
+      <video src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_094145_4a271a6c-3869-4f1c-8aa7-aeb0cb227994.mp4" autoplay loop muted playsinline></video>
+      <div class="video-overlay"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-brand">AEGIS<span>TOWER</span></div>
+      <div class="nav-links">
+        <a href="#intro" class="nav-link active"><span class="nav-number">01</span> Introduction</a>
+        <a href="#problem" class="nav-link"><span class="nav-number">02</span> The Paradigm Failure</a>
+        <a href="#solution" class="nav-link"><span class="nav-number">03</span> Zero-Latency Autonomy</a>
+        <a href="#architecture" class="nav-link"><span class="nav-number">04</span> 3-Tier Architecture</a>
+        <a href="#tier1" class="nav-link"><span class="nav-number">05</span> Sensory Matrix</a>
+        <a href="#tier2" class="nav-link"><span class="nav-number">06</span> Deterministic Engine</a>
+        <a href="#tier3" class="nav-link"><span class="nav-number">07</span> Kinetic Actuation</a>
+        <a href="#power" class="nav-link"><span class="nav-number">08</span> Microgrid Infrastructure</a>
+        <a href="#business" class="nav-link"><span class="nav-number">09</span> Commercial Model</a>
+        <a href="#roi" class="nav-link"><span class="nav-number">10</span> Financial Cross-Over</a>
+        <a href="#vision" class="nav-link"><span class="nav-number">11</span> Platform Licensing</a>
+        <a href="Aegis_Investor_Memorandum.html" target="_blank" class="nav-link" style="margin-top: 20px; color: var(--primary); font-weight: 700; border-left: 2px solid var(--primary); padding-left: 18px;"><span class="nav-number" style="color: var(--primary);">MEMO</span> Investor Doc</a>
+      </div>
+      <div class="sys-clock" id="sys-clock">SYS.TIME 00:00:00</div>
+    </nav>
+
+    <!-- Main Scrollable Content -->
+    <main class="main-content" id="main">
+      
+      <!-- 01 Introduction -->
+      <section id="intro" class="section">
+        <div class="content-block fade-up">
+          <div class="tag">CONFIDENTIAL INFRASTRUCTURE REPORT</div>
+          <h1>The Autonomous <span class="text-gradient">Hardware Envelope</span></h1>
+          <p style="font-size: 1.4rem; margin-top: 20px;">The world's first deterministic Neural Operating System for the built environment. We do not build "Smart Cities." We engineer deterministic, self-healing physical operating systems.</p>
+          <a href="Aegis_Investor_Memorandum.html" target="_blank" style="display: inline-block; margin-top: 30px; padding: 15px 30px; background: var(--primary); color: var(--dark); font-family: 'Outfit'; font-weight: 800; font-size: 1.1rem; text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 4px; box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); transition: all 0.3s ease;">View Investor Memorandum</a>
+        </div>
+      </section>
+
+      <!-- 02 The Problem -->
+      <section id="problem" class="section">
+        <div class="grid-2">
+          <div class="content-block fade-up">
+            <div class="tag">MARKET FAILURE</div>
+            <h2>The $180B "Smart City" <span style="color: #ff3366;">Collapse</span></h2>
+            <p>Between 2015-2025, the real estate sector deployed billions into IoT sensor networks. The instrumentation was technically sound, but the paradigm failed entirely because the bottleneck was never the data—<strong>it was the human reaction latency.</strong></p>
+            <ul class="styled-list">
+              <li><strong>T+0ms:</strong> Fiber-optic strain gauges detect a micro-fracture anomaly.</li>
+              <li><strong>T+800ms:</strong> Alert routed to legacy Building Management System (BMS).</li>
+              <li><strong>T+40 mins:</strong> Human facility manager triages the ticket.</li>
+              <li><strong>T+180 mins:</strong> Physical intervention finally begins.</li>
+            </ul>
+            <p style="margin-top: 20px;">By the time human intervention occurs, catastrophic structural or thermal damage is already compounding.</p>
+          </div>
+          <div class="panel fade-in">
+            <h3 style="margin-bottom: 15px; color: #ff3366;">Traditional Reaction Latency Timeline</h3>
+            <div class="chart-container" style="height: 320px;">
+              <canvas id="latencyChart" data-chart="latency"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 The Solution -->
+      <section id="solution" class="section">
+        <div class="grid-2">
+          <div class="panel fade-in">
+            <h3 style="margin-bottom: 15px;">Reaction Latency Comparison (Log Scale)</h3>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="comparisonChart" data-chart="comparison"></canvas>
+            </div>
+          </div>
+          <div class="content-block fade-up">
+            <div class="tag">THE SOLUTION</div>
+            <h2>Zero-Latency <span class="text-gradient">Autonomy</span></h2>
+            <p>Aegis Tower eliminates the human from the safety-critical response loop entirely. By vertically integrating deep learning with a physical robotic shadow infrastructure, Aegis OS translates insight into immediate physical action.</p>
+            <div style="display: flex; gap: 40px; margin-top: 40px; border-left: 2px solid var(--surface-border); padding-left: 30px;">
+              <div>
+                <div class="metric-large">< 50<span style="font-size: 1.5rem;">ms</span></div>
+                <div class="metric-label">End-to-End Actuation</div>
+                <p style="font-size: 0.95rem; margin-top: 5px;">From thermal anomaly detection to robotic physical intervention.</p>
+              </div>
+              <div>
+                <div class="metric-large">90<span style="font-size: 1.5rem;">s</span></div>
+                <div class="metric-label">Advance Warning</div>
+                <p style="font-size: 0.95rem; margin-top: 5px;">Bi-LSTM networks predict stress before it manifests.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 Architecture Overview -->
+      <section id="architecture" class="section">
+        <div class="fade-up" style="text-align: center; margin-bottom: 50px;">
+          <div class="tag">SYSTEM DESIGN</div>
+          <h2>The 3-Tier <span class="text-gradient">Neural Hierarchy</span></h2>
+          <p style="max-width: 700px; margin: 0 auto;">A fully integrated pipeline where telemetry flows from the physical world, through a deterministic AI validation engine, directly into mechanical robotic actuation.</p>
+        </div>
+        <div class="panel fade-in" style="display: flex; justify-content: center; padding: 40px; overflow: visible;">
+          <div class="custom-diagram">
+            <!-- Node 1 -->
+            <div class="dia-node" style="border-color: #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,0.2);">
+              <h4>Tier 1</h4>
+              <p>Sensory<br>Matrix</p>
+            </div>
+            
+            <!-- Arrow 1 -->
+            <div class="dia-arrow-container">
+              <div class="dia-label" style="color: #00e5ff;">4.2 TB/Day Telemetry</div>
+              <div class="dia-arrow-line" style="background: linear-gradient(90deg, #00e5ff, #b300ff);"></div>
+            </div>
+
+            <!-- Node 2 -->
+            <div class="dia-node" style="border-color: #b300ff; box-shadow: 0 0 20px rgba(179,0,255,0.2); background: rgba(179,0,255,0.05);">
+              <h4>Tier 2</h4>
+              <p>Aegis Edge<br>Kernel</p>
+            </div>
+
+            <!-- Fork Arrows -->
+            <div class="dia-fork">
+              <div class="dia-fork-path">
+                <div class="dia-label" style="color: #b300ff;">Bi-LSTM Prediction</div>
+                <div class="dia-fork-line"></div>
+              </div>
+              <div class="dia-fork-path">
+                <div class="dia-label" style="color: #b300ff;">PINN Physics Validation</div>
+                <div class="dia-fork-line"></div>
+              </div>
+            </div>
+
+            <!-- Node 3 -->
+            <div class="dia-node" style="border-color: #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,0.2);">
+              <h4>Tier 3</h4>
+              <p>Kinetic<br>Sub-Agents</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04.5 Hardware Substrate -->
+      <section id="hardware" class="section">
+        <div class="fade-up" style="text-align: center; margin-bottom: 50px;">
+          <div class="tag">PHYSICAL LAYER</div>
+          <h2>OEM Hardware <span class="text-gradient">Integrations</span></h2>
+          <p style="max-width: 800px; margin: 0 auto;">Aegis OS is fundamentally hardware-agnostic, yet the flagship deployment utilizes a highly curated, elite-tier substrate of industrial robotics and edge compute.</p>
+        </div>
+        
+        <div class="grid-3 fade-in">
+          <!-- Compute & Inference -->
+          <div class="panel" style="padding: 25px;">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px;">EDGE COMPUTE</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">NVIDIA Jetson AGX Orin</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Per-floor redundant clustering on an air-gapped LAN. Sub-25ms execution latency for anomaly detection without cloud dependency.</p>
+          </div>
+          
+          <!-- Nervous System -->
+          <div class="panel" style="padding: 25px;">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px;">SENSORY MATRIX</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">Luna ODISI & IR Arrays</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Fiber-optic Distributed Acoustic & Temperature Sensing (DAS/DTS) with 1-3m resolution. Pixel-level thermal boundaries.</p>
+          </div>
+
+          <!-- Kinetic Actuation -->
+          <div class="panel" style="padding: 25px;">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px;">KINETIC AGENTS</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">KUKA KR IONTEC</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Track-mounted autonomous robotic arms for hazardous intervention, replacing manual Building Maintenance Units (BMUs).</p>
+          </div>
+
+          <!-- Material Logistics -->
+          <div class="panel" style="padding: 25px;">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px;">MATERIAL LOGISTICS</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">Envac Pneumatics</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Floor-level automated pneumatic valves and high-velocity vacuum turbines transporting waste at 15–20 m/s, bypassing elevators.</p>
+          </div>
+
+          <!-- Energy Grid -->
+          <div class="panel" style="padding: 25px;">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px;">MICROGRID POWER</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">Capstone Microturbines</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Tri-generation CCHP integrating solar PV, kinetic elevator braking capture, and absorption chillers for total power sovereignty.</p>
+          </div>
+          
+          <!-- Legacy Translation -->
+          <div class="panel" style="padding: 25px; border-color: rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.05);">
+            <h3 style="font-size: 1rem; border-bottom: none; margin-bottom: 10px; color: var(--primary);">INTEROPERABILITY</h3>
+            <div style="font-size: 1.4rem; font-family: 'Outfit'; font-weight: 800; color: var(--text); margin-bottom: 15px;">LonWorks Gateway</div>
+            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0;">Translates legacy HVAC and proprietary BMS telemetry into the deterministic Aegis format for centralized inference processing.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 Tier 1 Details -->
+      <section id="tier1" class="section">
+        <div class="grid-2">
+          <div class="content-block fade-up">
+            <div class="tag">TIER 1</div>
+            <h2>Absolute <span class="text-gradient">Asset Visibility</span></h2>
+            <p>The tower is saturated with a dense matrix of diagnostic sensors, functioning as an omnipresent nervous system engineered for superior "Mean Time To Identify" (MTTI).</p>
+            <ul class="styled-list">
+              <li><strong>Fiber-Optic DAS (Luna ODISI):</strong> Detects acoustic signatures of escaping pressurized water or structural micro-fractures at 1-3m resolution.</li>
+              <li><strong>Distributed Temp Sensing (DTS):</strong> ±0.1°C precision along the entire length of the fiber run.</li>
+              <li><strong>Pre-Ignition Thermal Arrays:</strong> Infrared monitoring providing pixel-level temperature mapping, detecting a 0.5°C rise to prevent electrical fires before ignition.</li>
+            </ul>
+          </div>
+          <div class="panel fade-in">
+            <h3 style="margin-bottom: 15px;">Daily Telemetry Vector (4.2 TB Total)</h3>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="telemetryChart" data-chart="telemetry"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 Tier 2 Details -->
+      <section id="tier2" class="section">
+        <div class="grid-2">
+          <div class="panel fade-in">
+            <h3 style="margin-bottom: 15px;">Bi-LSTM Anomaly Probability vs Threshold</h3>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="predictionChart" data-chart="prediction"></canvas>
+            </div>
+          </div>
+          <div class="content-block fade-up">
+            <div class="tag">TIER 2</div>
+            <h2>Deterministic <span class="text-gradient">Intelligence</span></h2>
+            <p>The core operating system operates on air-gapped, per-floor redundant edge clusters, utterly independent of cloud latency.</p>
+            <ul class="styled-list">
+              <li><strong>Edge Processing:</strong> NVIDIA Jetson AGX Orin clusters running INT8 quantized models at < 2.4ms per sequence.</li>
+              <li><strong>Bi-LSTM Predictive Modeling:</strong> Analyzes historical telemetry to predict physical degradation up to 90 seconds before catastrophic failure.</li>
+              <li><strong>PINN Safety Layer:</strong> Cross-references incoming data strictly against the immutable laws of thermodynamics and structural mechanics, eliminating "hardware hallucinations."</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 07 Tier 3 Details -->
+      <section id="tier3" class="section">
+        <div class="grid-2">
+          <div class="content-block fade-up">
+            <div class="tag">TIER 3</div>
+            <h2>Kinetic <span class="text-gradient">Execution</span></h2>
+            <p>Prediction without deterministic actuation is an obsolete diagnostic tool. The Tier 3 shadow infrastructure receives and executes JSON dispatch payloads within milliseconds.</p>
+            <p>We replace manual facility labor entirely with mechanical precision and robotics, vastly reducing operational risk.</p>
+          </div>
+          <div class="panel fade-in" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr><th>Sub-Agent Hardware</th><th>Actuation Role & Specification</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>KUKA KR IONTEC Arms</strong></td>
+                  <td>Track-mounted robotic units operating 24/7 to automate facade maintenance, replacing human BMUs.</td>
+                </tr>
+                <tr>
+                  <td><strong>Algorithmic Fire Dampers</strong></td>
+                  <td>HVAC oxygen seal. Actuates in < 200ms based on thermal arrays to neutralize combustion events.</td>
+                </tr>
+                <tr>
+                  <td><strong>Micro-Drone Swarm</strong></td>
+                  <td>Volumetric inspection fleet housed in drop-ceiling docking bays with automated battery-swaps.</td>
+                </tr>
+                <tr>
+                  <td><strong>Envac Pneumatics / AVAC</strong></td>
+                  <td>High-velocity vacuum turbines transporting source-separated waste at 15–20 m/s.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 Power & Infrastructure -->
+      <section id="power" class="section">
+        <div class="grid-2">
+          <div class="panel fade-in">
+            <h3 style="margin-bottom: 15px;">Tri-Generation Energy Load Distribution</h3>
+            <div class="chart-container" style="height: 350px;">
+              <canvas id="energyChart" data-chart="energy"></canvas>
+            </div>
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 15px;">*Estimated architecture base load capacity distribution.</p>
+          </div>
+          <div class="content-block fade-up">
+            <div class="tag">INFRASTRUCTURE</div>
+            <h2>Absolute Grid <span class="text-gradient">Independence</span></h2>
+            <p>A deterministic AI system is completely useless if it relies on a vulnerable municipal power grid. Aegis Tower operates with complete Power Sovereignty.</p>
+            <ul class="styled-list">
+              <li><strong>Tri-Generation (CCHP):</strong> Core power driven by piped natural gas via Capstone Microturbines.</li>
+              <li><strong>Waste-Heat Recovery:</strong> Thermal energy generated by the microturbines is captured to drive absorption chillers for the HVAC network.</li>
+              <li><strong>Kinetic Capture:</strong> Elevators capture braking energy.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 09 Business Model -->
+      <section id="business" class="section">
+        <div class="grid-2">
+          <div class="content-block fade-up">
+            <div class="tag">COMMERCIAL ARCHITECTURE</div>
+            <h2>Venture-Scale <span class="text-gradient">Platform Thesis</span></h2>
+            <p>Aegis Tower is not a real estate project; it is the physical proof-of-concept for a deeply scalable <strong>Software-as-a-Service (SaaS)</strong> platform. We transition the built environment from a depreciating capital asset into a high-margin technology product.</p>
+            
+            <div style="margin-top: 30px;">
+              <div class="panel" style="padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase;">1. Hardware Deployment (CapEx)</h4>
+                <p style="font-size: 0.95rem; margin: 0;">We apply a <strong>25% Integration Margin</strong> to the base deeptech hardware costs to account for the specialized deployment of robotic sub-agents, edge clusters, and fiber-optics.</p>
+              </div>
+              <div class="panel" style="padding: 25px; border-left: 4px solid var(--secondary);">
+                <h4 style="color: var(--secondary); margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase;">2. Hardware-Agnostic OS License (SaaS)</h4>
+                <p style="font-size: 0.95rem; margin: 0;">A highly scalable, pure-margin flat fee of <strong>₹ 2.5 Crore</strong> per deployment to activate the Central Agentic AI. At scale, this dilutes to a negligible software premium of just <strong>~₹ 105 / sq ft</strong> for future developers.</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel fade-in" style="padding: 0;">
+            <table class="data-table">
+              <thead>
+                <tr><th>System Module</th><th>Base Cost</th><th>Client Rate (+25%)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Edge Computing & Neural Execution</td><td>₹ 297.29</td><td style="color: var(--primary);">₹ 371.61</td></tr>
+                <tr><td>Structural Telemetry & Sensing</td><td>₹ 371.61</td><td style="color: var(--primary);">₹ 464.51</td></tr>
+                <tr><td>Robotic Sub-Agent Network</td><td>₹ 445.93</td><td style="color: var(--primary);">₹ 557.41</td></tr>
+                <tr><td>Electrochromic Facade</td><td>₹ 222.97</td><td style="color: var(--primary);">₹ 278.71</td></tr>
+                <tr><td>Tri-Generation Microgrid</td><td>₹ 195.10</td><td style="color: var(--primary);">₹ 243.88</td></tr>
+                <tr style="background: rgba(0,229,255,0.05);">
+                  <td style="font-weight: 800;">TOTAL HARDWARE</td>
+                  <td style="font-weight: 800;">₹ 1,532.90</td>
+                  <td style="color: var(--primary); font-weight: 800; font-size: 1.1rem;">₹ 1,916.12 / sq ft</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="padding: 20px; text-align: center; border-top: 1px solid var(--surface-border); background: rgba(0,0,0,0.3);">
+              <span style="color: var(--text-muted); font-size: 0.9rem;">Total Client Turnkey Budget:</span> 
+              <strong style="color: var(--text); font-size: 1.2rem; margin-left: 10px;">~₹ 2,021 per sq ft</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 Financial ROI -->
+      <section id="roi" class="section">
+        <div class="grid-2">
+          <div class="content-block fade-up">
+            <div class="tag">FINANCIAL ARCHITECTURE</div>
+            <h2>The Month 48 <span class="text-gradient">Cross-Over</span></h2>
+            <p>By front-loading autonomy with a ₹ 27.62 Crore DeepTech CapEx, we achieve a total annual savings yield of <strong>₹ 6.90 Crore / year</strong>. At exactly 48 months, savings equal investment. Every subsequent month operates at pure, unmitigated margin.</p>
+            
+            <div style="margin-top: 30px;">
+              <h4 style="color: var(--primary); margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase;">The OpEx Elimination Equation</h4>
+              <ul class="styled-list" style="margin-bottom: 30px;">
+                <li><strong>₹ 0 Human Payroll:</strong> Complete elimination of human facility, security, and waste management overhead.</li>
+                <li><strong>₹ 0 Outsourced Servicing:</strong> Replaced entirely by the predictive Bi-LSTM maintenance kernel.</li>
+                <li><strong>Grid Waste Offset:</strong> Powered completely by the Tri-Generation Microgrid.</li>
+              </ul>
+              
+              <div class="panel" style="padding: 20px; border-color: rgba(179,0,255,0.4); background: rgba(179,0,255,0.05);">
+                <h4 style="color: #b300ff; margin-bottom: 10px; font-size: 1rem; text-transform: uppercase;">Target Market: Mega-Projects (SBUT)</h4>
+                <p style="font-size: 0.9rem; margin: 0; line-height: 1.5;">To ensure the ₹ 2.5 Crore OS license remains commercially viable (< 15% of total budget), the mathematical scale threshold is <strong>~130,000 sq ft</strong>. When deployed on hyper-dense urban mega-projects like the 74-story <strong>SBUT</strong> (Saifee Burhani Upliftment Trust), the software premium dilutes to near zero per square foot, offering developers the ultimate liability shield.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="panel fade-in" style="display: flex; flex-direction: column; justify-content: center;">
+            <div class="chart-container" style="height: 450px; width: 100%;">
+              <canvas id="roiChart" data-chart="roi"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 The Ultimate Vision -->
+      <section id="vision" class="section" style="text-align: center;">
+        <div class="content-block fade-up" style="max-width: 900px; margin: 0 auto;">
+          <h2 style="font-size: 4.5rem; margin-bottom: 30px;">You are not funding a building.<br><span class="text-gradient">You are funding an OS.</span></h2>
+          <p style="font-size: 1.6rem; color: var(--text); margin-bottom: 50px;">
+            The 26-floor flagship tower is merely the hardware validation substrate. The true asymmetric upside is licensing Aegis OS—the inference kernel, PINN Safety Layer, and Dispatch Protocol—to legacy real estate developers globally.
+          </p>
+          <div class="tag" style="padding: 15px 40px; font-size: 1.4rem; background: var(--primary); color: var(--dark); border: none; box-shadow: 0 0 40px rgba(0, 229, 255, 0.5); letter-spacing: 5px;">
+            THE OS IS THE PRODUCT
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      // Live System Clock
+      setInterval(() => {
+        const d = new Date();
+        document.getElementById('sys-clock').innerText = 'SYS.TIME ' + 
+          d.getHours().toString().padStart(2, '0') + ':' + 
+          d.getMinutes().toString().padStart(2, '0') + ':' + 
+          d.getSeconds().toString().padStart(2, '0');
+      }, 1000);
+      // Initialize Charts with HUD OS Typography
+      Chart.defaults.color = 'rgba(255, 255, 255, 0.6)';
+      Chart.defaults.font.family = "'Poppins', sans-serif";
+      Chart.defaults.font.size = 11;
+      Chart.defaults.plugins.legend.labels.color = '#00E5FF';
+      
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 2500, easing: 'easeOutQuart' },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(5, 8, 16, 0.95)',
+            titleFont: { family: 'Syne', size: 12 },
+            bodyFont: { family: 'Poppins', size: 12 },
+            padding: 12, borderColor: 'rgba(0, 229, 255, 0.4)', borderWidth: 1
+          }
+        }
+      };
+
+      const chartConfigs = {
+        'latency': {
+          type: 'bar',
+          data: {
+            labels: ['Sensor Detect', 'BMS Alert (800ms)', 'Ticket Gen (15m)', 'Triage (40m)', 'Dispatch (2.5h)', 'Intervention (3h+)'],
+            datasets: [{
+              label: 'Reaction Latency (Mins)',
+              data: [0, 0.013, 15, 40, 150, 180],
+              backgroundColor: 'rgba(255, 51, 102, 0.8)',
+              borderColor: '#ff3366', borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            ...commonOptions, indexAxis: 'y',
+            scales: { 
+              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + 'm' } }, 
+              y: { grid: { display: false } } 
+            }
+          }
+        },
+        'comparison': {
+          type: 'bar',
+          data: {
+            labels: ['Legacy Building (180 mins)', 'Aegis Autonomy (<50 ms)'],
+            datasets: [{
+              data: [10800000, 50],
+              backgroundColor: ['rgba(255, 51, 102, 0.6)', 'rgba(0, 229, 255, 0.8)'],
+              borderColor: ['#ff3366', '#00e5ff'], borderWidth: 1, borderRadius: 8, barPercentage: 0.6
+            }]
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              y: { 
+                type: 'logarithmic', grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { callback: v => ([10, 100, 1000, 10000, 100000, 1000000, 10000000].includes(v) ? v + ' ms' : '') }
+              },
+              x: { grid: { display: false } }
+            }
+          }
+        },
+        'telemetry': {
+          type: 'doughnut',
+          data: {
+            labels: ['Acoustic/Strain (DAS)', 'Thermal/IR (DTS)', 'Volumetric/Spatial', 'Energy Metrics'],
+            datasets: [{
+              data: [60, 20, 10, 10],
+              backgroundColor: ['rgba(0, 229, 255, 0.85)', 'rgba(179, 0, 255, 0.85)', '#f8fafc', '#475569'],
+              borderColor: '#050814', borderWidth: 3, hoverOffset: 10
+            }]
+          },
+          options: { ...commonOptions, plugins: { legend: { display: true, position: 'right' } }, cutout: '75%' }
+        },
+        'prediction': {
+          type: 'line',
+          data: (() => {
+            const timeLabels = []; const probData = [];
+            for(let i = 120; i >= 0; i-=5) {
+              timeLabels.push('T-'+i+'s');
+              // Anomaly crosses 0.78 exactly at T-90s, modeling the 90s advance warning
+              probData.push(i > 90 ? 0.05 + Math.random()*0.1 : 0.78 + ((90-i)/90) * 0.22);
+            }
+            return {
+              labels: timeLabels,
+              datasets: [{
+                label: 'Bi-LSTM P(anomaly)', data: probData,
+                borderColor: '#00e5ff', backgroundColor: 'rgba(0, 229, 255, 0.15)',
+                fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2
+              }, {
+                label: 'Action Threshold (0.78)', data: Array(timeLabels.length).fill(0.78),
+                borderColor: '#ff3366', borderDash: [5, 5], borderWidth: 1, pointRadius: 0
+              }]
+            };
+          })(),
+          options: {
+            ...commonOptions, plugins: { legend: { display: true, position: 'top' } },
+            scales: {
+              y: { max: 1.0, min: 0.0, grid: { color: 'rgba(255,255,255,0.05)' } },
+              x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }
+            }
+          }
+        },
+        'energy': {
+          type: 'doughnut',
+          data: {
+            labels: ['Piped Natural Gas (Microturbines)', 'Kinetic Elevators Capture', 'Solar PV', 'Bioreactor Offset'],
+            datasets: [{
+              data: [60, 15, 15, 10],
+              backgroundColor: ['rgba(179, 0, 255, 0.85)', 'rgba(0, 229, 255, 0.85)', '#f8fafc', '#334155'],
+              borderColor: '#050814', borderWidth: 3, hoverOffset: 10
+            }]
+          },
+          options: { ...commonOptions, plugins: { legend: { display: true, position: 'right' } }, cutout: '75%' }
+        },
+        'roi': {
+          type: 'line',
+          data: (() => {
+            const months = Array.from({length: 61}, (_, i) => i);
+            const capexData = Array(61).fill(27.62); // Exact CapEx from docs
+            const opexSavings = months.map(m => m * 0.575); // Exactly 6.90 Cr / 12 months
+            return {
+              labels: months,
+              datasets: [{
+                label: 'Initial DeepTech CapEx (Cr)', data: capexData,
+                borderColor: '#ff3366', borderWidth: 2, pointRadius: 0, borderDash: [5, 5]
+              }, {
+                label: 'Cumulative OpEx Savings', data: opexSavings,
+                borderColor: '#00e5ff', backgroundColor: 'rgba(0, 229, 255, 0.1)',
+                fill: true, tension: 0.1, pointRadius: 0, borderWidth: 3
+              }]
+            };
+          })(),
+          options: {
+            ...commonOptions, plugins: { legend: { display: true, position: 'top' } },
+            scales: {
+              y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => '₹ ' + v + ' Cr' } },
+              x: { grid: { display: false }, title: { display: true, text: 'Months of Operation', color: '#94a3b8' }, ticks: { maxTicksLimit: 12, callback: v => 'Month ' + v } }
+            }
+          }
+        }
+      };
+
+      const chartInstances = {};
+      const renderedCharts = new Set();
+
+      // Intersection Observer for scroll animations and triggering charts
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Animate HTML elements
+            entry.target.querySelectorAll('.fade-up, .fade-in').forEach(el => el.classList.add('visible'));
+            
+            // Update Sidebar Navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+              if (link.getAttribute('href') === '#' + entry.target.id) {
+                link.classList.add('active');
+              } else {
+                link.classList.remove('active');
+              }
+            });
+
+            // Initialize/Update Charts
+            const canvasList = entry.target.querySelectorAll('canvas[data-chart]');
+            canvasList.forEach(canvas => {
+              const chartType = canvas.getAttribute('data-chart');
+              if (chartConfigs[chartType]) {
+                if (!chartInstances[chartType]) {
+                  chartInstances[chartType] = new Chart(canvas, chartConfigs[chartType]);
+                  renderedCharts.add(chartType);
+                } else {
+                  // Re-trigger animation if it was already rendered previously
+                  chartInstances[chartType].reset();
+                  chartInstances[chartType].update();
+                }
+              }
+            });
+          }
+        });
+      }, { threshold: 0.4 });
+
+      document.querySelectorAll('.section').forEach(section => {
+        observer.observe(section);
+      });
+
+      // Initialize Mermaid with custom styles
+      mermaid.initialize({ 
+        startOnLoad: true, 
+        theme: 'dark', 
+        fontFamily: 'Syne',
+        themeVariables: { fontSize: '20px', primaryColor: '#00E5FF', primaryTextColor: '#00E5FF', lineColor: '#00E5FF', secondaryColor: '#030508', tertiaryColor: '#030508' }
+      });
+    </script>
+  </body>
+</html>

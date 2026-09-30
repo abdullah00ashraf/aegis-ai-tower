@@ -1,0 +1,23 @@
+{
+    "active_profile": "default_tower",
+    "profiles": {
+        "default_tower": {
+            "num_floors": 26,
+            "pillar_count": 8,
+            "core_slab_dimensions": [20.0, 20.0, 0.5],
+            "floor_height": 4.5
+        },
+        "slim_tower": {
+            "num_floors": 40,
+            "pillar_count": 4,
+            "core_slab_dimensions": [12.0, 12.0, 0.4],
+            "floor_height": 3.8
+        },
+        "massive_complex": {
+            "num_floors": 15,
+            "pillar_count": 16,
+            "core_slab_dimensions": [40.0, 40.0, 0.8],
+            "floor_height": 5.0
+        }
+    }
+}

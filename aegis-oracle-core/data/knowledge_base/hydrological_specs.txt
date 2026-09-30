@@ -1,0 +1,12 @@
+# Aegis Tower - Core Hydrological & Drainage Engineering Blueprint
+[INTEGRITY: SECURE // LEVEL 4 AUDIT PASS]
+
+1. Subsurface Groundwater Management:
+- Base Foundation Soil Profile: Loose Sand overlaying Marine Clay.
+- Foundation Hydrostatic Pressure limit: 320 kPa.
+- Triple-redundant dewatering pump matrix active at basements B1-B3.
+
+2. Supply & Stormwater Telemetry:
+- Stormwater Retention Reservoir Capacity: 180,000 Liters.
+- Maximum Rainfall Ingestion Threshold: 120 mm/hr.
+- Gravity-fed main greywater recycling output: 4.5 Liters/sec.

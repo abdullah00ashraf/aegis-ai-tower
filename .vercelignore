@@ -1,0 +1,8 @@
+aegis-oracle-core/
+Aegis_Knowledge_Base/
+node_modules/
+dist/
+documents/
+dataset_builder/
+*.gguf
+*.pdf

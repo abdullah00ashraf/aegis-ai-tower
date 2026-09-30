@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production Build Outputs
+dist/
+dist-ssr/
+build/
+**/dist/
+
+# Large Neural Models & GGUF Weights (>100MB / 4.7GB GitHub blocker)
+*.gguf
+*.bin
+*.pt
+*.safetensors
+models/
+**/models/
+aegis-oracle-core/python-engine/models/
+
+# Large External Reference PDFs (>10MB)
+Aegis_Knowledge_Base/**/Originals/*.pdf
+Aegis_Knowledge_Base/01_Core_Physics_and_AI/Originals/*.pdf
+Aegis_Knowledge_Base/02_Hardware_and_Actuation/Originals/*.pdf
+Aegis_Knowledge_Base/04_Legal_and_Compliance/Originals/*.pdf
+documents/*.pdf
+
+# Local Environment Variables & Secrets (CRITICAL: Isolates OIDC & API keys)
+.env
+.env.*
+.env.local
+**/.env.local
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Deployment & Hosting Caches
+.vercel/
+**/.vercel/
+.railway/
+
+# Python Virtual Environments & Caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor & System Files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
