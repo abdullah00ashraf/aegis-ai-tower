@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![React: 19](https://img.shields.io/badge/React-19-cyan.svg)](https://react.dev/)
+[![Hugging Face Persona](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Persona%20ChatML-yellow.svg)](https://huggingface.co/datasets/abdullahashraf122/aegis-persona-sovereign-node)
+[![Hugging Face Shaders](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-WebGPU%20WGSL%20Shaders-blue.svg)](https://huggingface.co/datasets/abdullahashraf122/aegis-wgsl-webgpu-shaders)
 [![Three.js: Fiber](https://img.shields.io/badge/3D-React%20Three%20Fiber-black.svg)](https://threejs.org/)
 [![Tailwind: 4.0](https://img.shields.io/badge/CSS-Tailwind%204-teal.svg)](https://tailwindcss.com/)
 [![Engine: Aegis Oracle Core](https://img.shields.io/badge/Backend-Aegis%20Oracle%20Core-purple.svg)](#aegis-oracle-core)
@@ -124,6 +126,32 @@ python server.py
 
 ---
 
-## 5. License
+## 5. 🤗 Curated Instruction Datasets on Hugging Face
+
+The custom ChatML and WebGPU instruction datasets compiled by the `dataset_builder` pipeline are hosted on Hugging Face:
+
+### 1. Aegis Sovereign Node Persona & Technical Dialogue
+* **`aegis-persona-sovereign-node`** (ChatML JSONL):  
+  [`https://huggingface.co/datasets/abdullahashraf122/aegis-persona-sovereign-node`](https://huggingface.co/datasets/abdullahashraf122/aegis-persona-sovereign-node)  
+  *Conditions autonomous models with executive tech-founder cadence while defending civil/cyber infrastructure and BACnet/LonWorks architecture.*
+
+### 2. Aegis WGSL WebGPU Shader Instruction Dataset
+* **`aegis-wgsl-webgpu-shaders`** (Text-to-Code JSONL):  
+  [`https://huggingface.co/datasets/abdullahashraf122/aegis-wgsl-webgpu-shaders`](https://huggingface.co/datasets/abdullahashraf122/aegis-wgsl-webgpu-shaders)  
+  *50 high-precision prompt-response pairs mapping physical simulation prompts directly to functional WebGPU WGSL compute and fragment shaders.*
+
+```python
+# Quickstart: Load either dataset via datasets
+from datasets import load_dataset
+
+persona_ds = load_dataset("abdullahashraf122/aegis-persona-sovereign-node")
+shader_ds  = load_dataset("abdullahashraf122/aegis-wgsl-webgpu-shaders")
+
+print("Persona sample:", persona_ds["train"][0]["messages"][1]["content"])
+```
+
+---
+
+## 6. License
 
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
